@@ -34,7 +34,8 @@
   .modal-bg{background:rgba(23,24,28,.55);}
   @media print{
     @page{ size: A5 landscape; margin: 8mm; }
-    body.printing-invoice *{visibility:hidden;}
+    html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+    body.printing-invoice *{visibility:hidden; -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact;}
     body.printing-invoice #invoice-print-area, body.printing-invoice #invoice-print-area *{visibility:visible;}
     body.printing-invoice #invoice-print-area{position:absolute;left:0;top:0;width:194mm;}
     .no-print{display:none !important;}
@@ -74,6 +75,30 @@ function logoMark(size){
     <g transform="translate(102,78)" stroke="#21409A" stroke-width="2.2" fill="none">
       <circle r="11"/><line x1="-17" y1="0" x2="17" y2="0"/><line x1="0" y1="-17" x2="0" y2="17"/>
       <circle r="2.2" fill="#21409A" stroke="none"/>
+    </g>
+  </svg>`;
+}
+/* Full brand logo (mark + wordmark), matching icah-print-logo.svg exactly.
+   Used on the printed invoice so it looks identical to the master logo file. */
+function logoFull(h){
+  return `<svg height="${h}" viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none">
+    <g transform="translate(20,10)">
+      <g opacity="0.55">
+        <path d="M100 18 C138 66 152 96 152 122 A52 52 0 1 1 48 122 C48 96 62 66 100 18 Z" fill="#17A6C7" transform="translate(-5,4)"/>
+        <path d="M100 18 C138 66 152 96 152 122 A52 52 0 1 1 48 122 C48 96 62 66 100 18 Z" fill="#D6336C" transform="translate(5,-3)"/>
+      </g>
+      <path d="M100 18 C138 66 152 96 152 122 A52 52 0 1 1 48 122 C48 96 62 66 100 18 Z" fill="#21409A"/>
+      <g transform="translate(122,78)" stroke="#F3F1EC" stroke-width="2.4" fill="none">
+        <circle r="13"/>
+        <line x1="-20" y1="0" x2="20" y2="0"/>
+        <line x1="0" y1="-20" x2="0" y2="20"/>
+        <circle r="2.6" fill="#F3F1EC" stroke="none"/>
+      </g>
+    </g>
+    <g transform="translate(200,0)">
+      <text x="0" y="118" font-family="'Big Shoulders Display',Arial,sans-serif" font-weight="900" font-size="88" fill="#17181C">ICAH</text>
+      <text x="0" y="162" font-family="'IBM Plex Sans',Arial,sans-serif" font-weight="600" font-size="22" fill="#21409A" style="letter-spacing:0.32em">PRINT &amp; DIGITAL PRINTING</text>
+      <rect x="2" y="176" width="270" height="4" fill="#D6336C"/>
     </g>
   </svg>`;
 }
@@ -481,12 +506,9 @@ function InvoiceModal(){
     <div class="bg-white rounded-xl max-w-3xl w-full max-h-[92vh] overflow-y-auto fade-in">
       <div id="invoice-print-area" class="p-6 md:p-8">
         <div class="flex items-start justify-between border-b pb-4 mb-4" style="border-color:var(--line)">
-          <div class="flex items-center gap-3">
-            ${logoMark(48)}
-            <div>
-              <div class="font-display text-2xl leading-none">${state.settings.storeName.toUpperCase()}</div>
-              <div class="text-xs mt-1" style="color:var(--ink-600)">${state.settings.address||''}</div>
-            </div>
+          <div>
+            ${logoFull(42)}
+            ${state.settings.address ? `<div class="text-xs mt-1.5" style="color:var(--ink-600)">${state.settings.address}</div>` : ''}
           </div>
           <div class="text-right text-xs font-mono leading-relaxed">
             <div><span style="color:var(--ink-600)">No. Invoice</span> &nbsp;<b>${t.invoiceNo}</b></div>
