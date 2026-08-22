@@ -33,9 +33,10 @@
   .prod-card:hover{box-shadow:0 4px 14px rgba(23,24,28,.08); transform:translateY(-1px);}
   .modal-bg{background:rgba(23,24,28,.55);}
   @media print{
+    @page{ size: A5 landscape; margin: 8mm; }
     body.printing-invoice *{visibility:hidden;}
     body.printing-invoice #invoice-print-area, body.printing-invoice #invoice-print-area *{visibility:visible;}
-    body.printing-invoice #invoice-print-area{position:absolute;left:0;top:0;width:320px;}
+    body.printing-invoice #invoice-print-area{position:absolute;left:0;top:0;width:194mm;}
     .no-print{display:none !important;}
   }
   .spin{animation:spin 1.1s linear infinite;}
@@ -91,9 +92,11 @@ const store = {
 };
 
 /* ---------- state ---------- */
+const DEFAULT_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw39WMIjf8Fr6dX_vK2xgSgwgcbVFtAmk3bgAGNUwua0tBRdxNyYuw9I1mMGHOxROJO/exec';
+
 const state = {
   view: 'kasir',
-  settings: { webAppUrl:'', storeName:'Icah Print', address:'', cashier:'Kasir', footer:'Terima kasih telah mempercayakan cetakan Anda ke Icah Print' },
+  settings: { webAppUrl: DEFAULT_WEBAPP_URL, storeName:'Icah Print', address:'', cashier:'Kasir', footer:'Terima kasih telah mempercayakan cetakan Anda ke Icah Print' },
   products: [],
   cart: [],
   category: 'Semua',
@@ -170,7 +173,7 @@ async function syncProductsFromSheet(silent){
 
 /* ---------- init ---------- */
 async function init(){
-  try{ const s = await store.get('icahprint:settings'); if(s) state.settings = {...state.settings, ...JSON.parse(s)}; }catch(e){}
+  try{ const s = await store.get('icahprint:settings'); if(s){ const saved = JSON.parse(s); state.settings = {...state.settings, ...saved}; if(!saved.webAppUrl) state.settings.webAppUrl = DEFAULT_WEBAPP_URL; } }catch(e){}
   try{ const p = await store.get('icahprint:products'); if(p) state.products = JSON.parse(p); }catch(e){}
   if(!state.products || !state.products.length) state.products = DEFAULT_PRODUCTS;
   render();
@@ -442,7 +445,7 @@ function ViewPengaturan(){
         <div>
           <label class="text-xs font-medium" style="color:var(--ink-600)">URL Web App Google Apps Script</label>
           <input name="webAppUrl" value="${s.webAppUrl}" placeholder="https://script.google.com/macros/s/…/exec" class="w-full border rounded-lg px-3 py-2 text-sm mt-1 font-mono" style="border-color:var(--line)">
-          <p class="text-[11px] mt-1" style="color:var(--ink-600)">Lihat panduan pemasangan di file PANDUAN-SETUP.md</p>
+          <p class="text-[11px] mt-1" style="color:var(--ink-600)">URL ini sudah tertanam otomatis di kode. Ubah hanya jika Anda memasang Spreadsheet/Apps Script yang berbeda.</p>
         </div>
         <div>
           <label class="text-xs font-medium" style="color:var(--ink-600)">Nama Toko</label>
@@ -474,38 +477,64 @@ function ViewPengaturan(){
 function InvoiceModal(){
   const t = state.lastInvoice;
   return `
-  <div class="fixed inset-0 modal-bg z-40 flex items-center justify-center p-4 no-print">
-    <div class="bg-white rounded-xl max-w-sm w-full max-h-[90vh] overflow-y-auto fade-in">
-      <div id="invoice-print-area" class="p-5 font-mono text-xs">
-        <div class="text-center mb-3">
-          <div class="font-display text-lg font-sans" style="font-family:'Big Shoulders Display'">${state.settings.storeName.toUpperCase()}</div>
-          <div style="color:var(--ink-600)">${state.settings.address||''}</div>
+  <div class="fixed inset-0 modal-bg z-40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-3xl w-full max-h-[92vh] overflow-y-auto fade-in">
+      <div id="invoice-print-area" class="p-6 md:p-8">
+        <div class="flex items-start justify-between border-b pb-4 mb-4" style="border-color:var(--line)">
+          <div class="flex items-center gap-3">
+            ${logoMark(48)}
+            <div>
+              <div class="font-display text-2xl leading-none">${state.settings.storeName.toUpperCase()}</div>
+              <div class="text-xs mt-1" style="color:var(--ink-600)">${state.settings.address||''}</div>
+            </div>
+          </div>
+          <div class="text-right text-xs font-mono leading-relaxed">
+            <div><span style="color:var(--ink-600)">No. Invoice</span> &nbsp;<b>${t.invoiceNo}</b></div>
+            <div><span style="color:var(--ink-600)">Tanggal</span> &nbsp;${t.tanggal}</div>
+            <div><span style="color:var(--ink-600)">Kasir</span> &nbsp;${t.kasir}</div>
+          </div>
         </div>
-        <div class="dashed-x my-2"></div>
-        <div class="flex justify-between"><span>No. Invoice</span><span>${t.invoiceNo}</span></div>
-        <div class="flex justify-between"><span>Tanggal</span><span>${t.tanggal}</span></div>
-        <div class="flex justify-between"><span>Kasir</span><span>${t.kasir}</span></div>
-        <div class="dashed-x my-2"></div>
-        ${t.items.map(i=>`
-          <div class="mb-1">
-            <div>${i.nama}</div>
-            <div class="flex justify-between" style="color:var(--ink-600)"><span>${i.qty} x ${rupiah(i.harga)}</span><span>${rupiah(i.subtotal)}</span></div>
-          </div>`).join('')}
-        <div class="dashed-x my-2"></div>
-        <div class="flex justify-between"><span>Subtotal</span><span>${rupiah(t.subtotal)}</span></div>
-        ${t.diskon? `<div class="flex justify-between"><span>Diskon</span><span>-${rupiah(t.diskon)}</span></div>`:''}
-        <div class="flex justify-between font-bold text-sm mt-1"><span>TOTAL</span><span>${rupiah(t.total)}</span></div>
-        <div class="flex justify-between mt-1"><span>${t.metode}</span><span>${rupiah(t.bayar)}</span></div>
-        ${t.metode==='Tunai'?`<div class="flex justify-between"><span>Kembali</span><span>${rupiah(t.kembalian)}</span></div>`:''}
-        <div class="dashed-x my-3"></div>
-        <div class="text-center" style="color:var(--ink-600)">${state.settings.footer}</div>
-        <div class="flex justify-center mt-2">${regMark(24,'var(--press)')}</div>
+
+        <table class="w-full text-xs font-mono mb-4">
+          <thead>
+            <tr class="text-left border-b" style="border-color:var(--line);color:var(--ink-600)">
+              <th class="py-1.5 pr-2 font-sans font-medium">Nama Barang</th>
+              <th class="py-1.5 px-2 font-sans font-medium text-right">Qty</th>
+              <th class="py-1.5 px-2 font-sans font-medium text-right">Harga</th>
+              <th class="py-1.5 pl-2 font-sans font-medium text-right">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${t.items.map(i=>`
+            <tr class="border-b" style="border-color:#EFEBE2">
+              <td class="py-1.5 pr-2">${i.nama}</td>
+              <td class="py-1.5 px-2 text-right">${i.qty}</td>
+              <td class="py-1.5 px-2 text-right">${rupiah(i.harga)}</td>
+              <td class="py-1.5 pl-2 text-right">${rupiah(i.subtotal)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+
+        <div class="flex justify-end">
+          <div class="w-full max-w-[260px] text-xs font-mono space-y-1.5">
+            <div class="flex justify-between"><span style="color:var(--ink-600)">Subtotal</span><span>${rupiah(t.subtotal)}</span></div>
+            ${t.diskon? `<div class="flex justify-between"><span style="color:var(--ink-600)">Diskon</span><span>-${rupiah(t.diskon)}</span></div>`:''}
+            <div class="flex justify-between text-base font-bold pt-1 border-t" style="border-color:var(--line);color:var(--press)"><span class="font-sans">TOTAL</span><span>${rupiah(t.total)}</span></div>
+            <div class="flex justify-between pt-1"><span style="color:var(--ink-600)">${t.metode}</span><span>${rupiah(t.bayar)}</span></div>
+            ${t.metode==='Tunai'?`<div class="flex justify-between"><span style="color:var(--ink-600)">Kembali</span><span>${rupiah(t.kembalian)}</span></div>`:''}
+          </div>
+        </div>
+
+        <div class="mt-6 pt-3 border-t flex items-center justify-between gap-4" style="border-color:var(--line)">
+          <div class="text-[11px]" style="color:var(--ink-600)">${state.settings.footer}</div>
+          ${regMark(26,'var(--press)')}
+        </div>
       </div>
       <div class="p-4 pt-0 flex gap-2 no-print">
-        <button id="print-invoice" class="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold" style="background:var(--press)">Cetak</button>
+        <button id="print-invoice" class="flex-1 py-2.5 rounded-lg text-white text-sm font-semibold" style="background:var(--press)">Cetak (A5 Landscape)</button>
         <button id="close-invoice" class="px-4 py-2.5 rounded-lg text-sm font-medium border" style="border-color:var(--line)">Transaksi Baru</button>
       </div>
-      ${ t.syncWarning ? `<div class="mx-4 mb-4 text-[11px] p-2 rounded" style="background:var(--stamp-red-50);color:var(--stamp-red)">${t.syncWarning}</div>` : '' }
+      ${ t.syncWarning ? `<div class="mx-4 mb-4 text-[11px] p-2 rounded no-print" style="background:var(--stamp-red-50);color:var(--stamp-red)">${t.syncWarning}</div>` : '' }
     </div>
   </div>`;
 }
