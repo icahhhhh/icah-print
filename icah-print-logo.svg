@@ -1,0 +1,37 @@
+<svg viewBox="0 0 640 220" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&amp;family=IBM+Plex+Sans:wght@600&amp;display=swap');
+    .wordmark { font-family: 'Big Shoulders Display', Arial, sans-serif; font-weight: 900; }
+    .tagline { font-family: 'IBM Plex Sans', Arial, sans-serif; font-weight: 600; letter-spacing: 0.32em; }
+  </style>
+
+  <!-- ===== MARK: ink drop with print registration crosshair ===== -->
+  <g transform="translate(20,10)">
+    <!-- CMYK misregistration ghosts (classic print-proofing look) -->
+    <g opacity="0.55">
+      <path d="M100 18 C138 66 152 96 152 122 A52 52 0 1 1 48 122 C48 96 62 66 100 18 Z"
+            fill="#17A6C7" transform="translate(-5,4)"/>
+      <path d="M100 18 C138 66 152 96 152 122 A52 52 0 1 1 48 122 C48 96 62 66 100 18 Z"
+            fill="#D6336C" transform="translate(5,-3)"/>
+    </g>
+
+    <!-- Main ink drop -->
+    <path d="M100 18 C138 66 152 96 152 122 A52 52 0 1 1 48 122 C48 96 62 66 100 18 Z"
+          fill="#21409A"/>
+
+    <!-- Registration mark (replaces the usual drop 'highlight') -->
+    <g transform="translate(122,78)" stroke="#F3F1EC" stroke-width="2.4" fill="none">
+      <circle r="13"/>
+      <line x1="-20" y1="0" x2="20" y2="0"/>
+      <line x1="0" y1="-20" x2="0" y2="20"/>
+      <circle r="2.6" fill="#F3F1EC" stroke="none"/>
+    </g>
+  </g>
+
+  <!-- ===== WORDMARK ===== -->
+  <g transform="translate(200,0)">
+    <text x="0" y="118" class="wordmark" font-size="88" fill="#17181C">ICAH</text>
+    <text x="0" y="162" class="tagline" font-size="22" fill="#21409A">PRINT &amp; DIGITAL PRINTING</text>
+    <rect x="2" y="176" width="270" height="4" fill="#D6336C"/>
+  </g>
+</svg>
